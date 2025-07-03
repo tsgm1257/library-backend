@@ -13,7 +13,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://client-gamma-woad.vercel.app"],
+    origin: ["https://client-gamma-woad.vercel.app"],
   })
 );
 app.use(express.json()); // ← JSON parser must come before your routes
