@@ -4,10 +4,25 @@ const Book = require("../models/Book");
 const router = express.Router();
 
 // Get all books
+// Get all books with pagination
 router.get("/", async (req, res) => {
   try {
-    const books = await Book.find();
-    res.json(books);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const books = await Book.find().skip(skip).limit(limit);
+    const total = await Book.countDocuments();
+
+    res.status(200).json({
+      data: books,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch {
     res.status(500).json({ error: "Failed to fetch books" });
   }

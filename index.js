@@ -1,21 +1,24 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const serverless = require("serverless-http");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://client-gamma-woad.vercel.app"], // Include protocol!
+  })
+);
 app.use(express.json());
 
 // Routes
-app.use("/api/books", require("./controllers/book.controller"));
-app.use('/api/borrows', require('./controllers/borrow.controller'));
+app.use("/api/books", require("../controllers/book.controller"));
+app.use("/api/borrows", require("../controllers/borrow.controller"));
 
-
-// Connect to MongoDB
+// MongoDB connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
@@ -30,3 +33,6 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+// Export as serverless function
+module.exports = serverless(app);
