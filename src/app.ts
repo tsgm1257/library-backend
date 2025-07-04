@@ -10,20 +10,22 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// ✅ CORS before anything else
 app.use(
   cors({
-    origin: ["https://client-gamma-woad.vercel.app"],
+    origin: ["http://localhost:5173", "https://client-gamma-woad.vercel.app"],
   })
 );
-app.use(express.json()); // ← JSON parser must come before your routes
 
-// Connect to DB
+// ✅ JSON parser
+app.use(express.json());
+
+// ✅ Connect to DB
 connectDB();
 
-// Routes
+// ✅ Routes
 app.use("/api/books", bookController);
-app.use("/api/borrows", borrowController);
+app.use("/api", borrowController);
 
 app.get("/", (_req, res) => {
   res.send("Library Management API is running...");

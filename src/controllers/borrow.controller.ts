@@ -5,7 +5,7 @@ import Book from "../models/Book";
 const router = Router();
 
 // POST /api/borrows/:bookId
-router.post("/:bookId", async (req: Request, res: Response) => {
+router.post("/borrows/:bookId", async (req: Request, res: Response) => {
   try {
     const { bookId } = req.params;
     const { quantity, dueDate } = req.body;
@@ -40,26 +40,44 @@ router.post("/:bookId", async (req: Request, res: Response) => {
 
     const saved = await borrow.save();
     res.status(201).json(saved);
-  } catch {
+  } catch (error) {
+    console.error("Borrow error:", error);
     res.status(500).json({ error: "Failed to borrow book" });
   }
 });
 
-// GET /api/borrows/summary
-router.get("/summary", async (_req: Request, res: Response) => {
+// GET /api/borrows/borrow-summary
+router.get("/borrow-summary", async (_req: Request, res: Response) => {
   try {
-    const borrows = await Borrow.find().populate("book");
-
-    const summary = borrows.map((borrow) => ({
-      id: borrow._id,
-      bookTitle: (borrow.book as any)?.title || "Unknown",
-      quantity: borrow.quantity,
-      dueDate: borrow.dueDate,
-      createdAt: borrow.createdAt,
-    }));
+    const summary = await Borrow.aggregate([
+      {
+        $group: {
+          _id: "$book",
+          totalBorrowed: { $sum: "$quantity" },
+        },
+      },
+      {
+        $lookup: {
+          from: "books",
+          localField: "_id",
+          foreignField: "_id",
+          as: "bookInfo",
+        },
+      },
+      { $unwind: "$bookInfo" },
+      {
+        $project: {
+          _id: 0,
+          title: "$bookInfo.title",
+          isbn: "$bookInfo.isbn",
+          totalBorrowed: 1,
+        },
+      },
+    ]);
 
     res.json(summary);
-  } catch {
+  } catch (error) {
+    console.error("Summary error:", error);
     res.status(500).json({ error: "Failed to fetch summary" });
   }
 });
